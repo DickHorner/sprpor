@@ -67,6 +67,33 @@ async function initializeAgentSystem() {
     await agentManager.registerAgent(notionAgent);
     console.log('NotionIntegrationAgent registered');
 
+    // ===== Section 3 (Q3 2024) Agents =====
+    
+    // Register Knowledge Management Agent (3.1)
+    const knowledgeAgent = new KnowledgeManagementAgent();
+    await agentManager.registerAgent(knowledgeAgent);
+    console.log('KnowledgeManagementAgent registered');
+
+    // Register Collaboration Agent (3.2)
+    const collaborationAgent = new CollaborationAgent();
+    await agentManager.registerAgent(collaborationAgent);
+    console.log('CollaborationAgent registered');
+
+    // Register Integration Hub Agent (3.3)
+    const integrationHubAgent = new IntegrationHubAgent();
+    await agentManager.registerAgent(integrationHubAgent);
+    console.log('IntegrationHubAgent registered');
+
+    // Register Export Enhancements Agent (3.4)
+    const exportAgent = new ExportEnhancementsAgent();
+    await agentManager.registerAgent(exportAgent);
+    console.log('ExportEnhancementsAgent registered');
+
+    // Register Mobile Companion Agent (3.5)
+    const mobileAgent = new MobileCompanionAgent();
+    await agentManager.registerAgent(mobileAgent);
+    console.log('MobileCompanionAgent registered');
+
     // Set up event listeners for existing extension features
     _setupEventBridges();
 
