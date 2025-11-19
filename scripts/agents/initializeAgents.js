@@ -17,6 +17,31 @@ async function initializeAgentSystem() {
     await agentManager.registerAgent(performanceAgent);
     console.log('PerformanceMonitorAgent registered');
 
+    // Register Conversation Intelligence Agent (1.2)
+    const conversationAgent = new ConversationIntelligenceAgent();
+    await agentManager.registerAgent(conversationAgent);
+    console.log('ConversationIntelligenceAgent registered');
+
+    // Register Enhanced Search Agent (1.3)
+    const searchAgent = new EnhancedSearchAgent();
+    await agentManager.registerAgent(searchAgent);
+    console.log('EnhancedSearchAgent registered');
+
+    // Register Performance Optimizer Agent (1.4)
+    const optimizerAgent = new PerformanceOptimizerAgent();
+    await agentManager.registerAgent(optimizerAgent);
+    console.log('PerformanceOptimizerAgent registered');
+
+    // Register UI/UX Enhancement Agent (1.5)
+    const uiuxAgent = new UIUXEnhancementAgent();
+    await agentManager.registerAgent(uiuxAgent);
+    console.log('UIUXEnhancementAgent registered');
+
+    // Register Workflow Automation Agent (2.1)
+    const workflowAgent = new WorkflowAutomationAgent();
+    await agentManager.registerAgent(workflowAgent);
+    console.log('WorkflowAutomationAgent registered');
+
     // Set up event listeners for existing extension features
     _setupEventBridges();
 
