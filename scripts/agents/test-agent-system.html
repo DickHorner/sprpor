@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+            margin-top: 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .output {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border: 1px solid #e5e7eb;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .info {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Agent System Test Suite</h1>
+    
+    <div class="test-section">
+        <h2>1. EventBus Tests</h2>
+        <button onclick="testEventBus()">Test EventBus</button>
+        <div id="eventbus-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. BaseAgent Tests</h2>
+        <button onclick="testBaseAgent()">Test BaseAgent</button>
+        <div id="baseagent-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. AgentManager Tests</h2>
+        <button onclick="testAgentManager()">Test AgentManager</button>
+        <div id="agentmanager-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. PerformanceMonitorAgent Tests</h2>
+        <button onclick="testPerformanceAgent()">Test Performance Agent</button>
+        <div id="performance-output" class="output"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Integration Tests</h2>
+        <button onclick="testIntegration()">Test Full Integration</button>
+        <button onclick="showMonitorDashboard()">Show Monitor Dashboard</button>
+        <div id="integration-output" class="output"></div>
+    </div>
+
+    <!-- Load agent system files -->
+    <script src="EventBus.js"></script>
+    <script src="BaseAgent.js"></script>
+    <script src="AgentManager.js"></script>
+    <script src="PerformanceMonitorAgent.js"></script>
+    <script src="AgentMonitor.js"></script>
+    <script src="initializeAgents.js"></script>
+    
+    <!-- Mock chrome.storage for testing -->
+    <script>
+        // Mock Chrome storage API for testing
+        window.chrome = {
+            storage: {
+                local: {
+                    get: function(keys, callback) {
+                        callback({});
+                    },
+                    set: function(data, callback) {
+                        if (callback) callback();
+                    }
+                },
+                onChanged: {
+                    addListener: function(callback) {
+                        // Mock listener
+                    }
+                }
+            }
+        };
+    </script>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const output = document.getElementById(elementId);
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            output.innerHTML += `<span class="${className}">${message}</span>\n`;
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        // Test EventBus
+        async function testEventBus() {
+            clearLog('eventbus-output');
+            log('eventbus-output', '=== Testing EventBus ===\n');
+
+            try {
+                const testBus = new EventBus();
+                
+                // Test subscription
+                let callCount = 0;
+                const unsubscribe = testBus.on('test-event', (event) => {
+                    callCount++;
+                    log('eventbus-output', `Event received: ${event.type}, data: ${JSON.stringify(event.data)}`);
+                });
+                
+                // Test emission
+                await testBus.emit('test-event', { message: 'Hello' });
+                
+                if (callCount === 1) {
+                    log('eventbus-output', '✓ Event emission works', 'success');
+                } else {
+                    log('eventbus-output', '✗ Event emission failed', 'error');
+                }
+
+                // Test once
+                let onceCount = 0;
+                testBus.once('once-event', () => {
+                    onceCount++;
+                });
+                await testBus.emit('once-event', {});
+                await testBus.emit('once-event', {});
+                
+                if (onceCount === 1) {
+                    log('eventbus-output', '✓ Once subscription works', 'success');
+                } else {
+                    log('eventbus-output', '✗ Once subscription failed', 'error');
+                }
+
+                // Test unsubscribe
+                unsubscribe();
+                await testBus.emit('test-event', { message: 'Should not receive' });
+                
+                // Test statistics
+                const stats = testBus.getStats();
+                log('eventbus-output', `\nStatistics: ${JSON.stringify(stats, null, 2)}`);
+                
+                // Test history
+                const history = testBus.getHistory({ limit: 5 });
+                log('eventbus-output', `History entries: ${history.length}`);
+                
+                log('eventbus-output', '\n✓ EventBus tests completed successfully', 'success');
+            } catch (error) {
+                log('eventbus-output', `✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test BaseAgent
+        async function testBaseAgent() {
+            clearLog('baseagent-output');
+            log('baseagent-output', '=== Testing BaseAgent ===\n');
+
+            try {
+                // Create a test agent
+                class TestAgent extends BaseAgent {
+                    constructor() {
+                        super({
+                            agentId: 'test-agent',
+                            name: 'Test Agent',
+                            capabilities: ['test-task'],
+                            version: '1.0.0'
+                        });
+                    }
+
+                    async _executeTask(task) {
+                        return { success: true, taskId: task.id };
+                    }
+                }
+
+                const agent = new TestAgent();
+                log('baseagent-output', `Created agent: ${agent.name}`);
+
+                // Test initialization
+                await agent.initialize();
+                if (agent.state === 'idle') {
+                    log('baseagent-output', '✓ Agent initialization works', 'success');
+                } else {
+                    log('baseagent-output', '✗ Agent initialization failed', 'error');
+                }
+
+                // Test canHandle
+                const canHandle = agent.canHandle({ type: 'test-task' });
+                if (canHandle) {
+                    log('baseagent-output', '✓ canHandle works', 'success');
+                } else {
+                    log('baseagent-output', '✗ canHandle failed', 'error');
+                }
+
+                // Set event bus
+                agent.setEventBus(new EventBus());
+
+                // Test execution
+                const result = await agent.execute({ id: 'task-1', type: 'test-task' });
+                if (result.success) {
+                    log('baseagent-output', '✓ Task execution works', 'success');
+                } else {
+                    log('baseagent-output', '✗ Task execution failed', 'error');
+                }
+
+                // Test status
+                const status = agent.getStatus();
+                log('baseagent-output', `\nAgent status: ${JSON.stringify(status, null, 2)}`);
+
+                // Test enable/disable
+                agent.disable();
+                if (!agent.enabled) {
+                    log('baseagent-output', '✓ Disable works', 'success');
+                } else {
+                    log('baseagent-output', '✗ Disable failed', 'error');
+                }
+
+                agent.enable();
+                if (agent.enabled) {
+                    log('baseagent-output', '✓ Enable works', 'success');
+                } else {
+                    log('baseagent-output', '✗ Enable failed', 'error');
+                }
+
+                log('baseagent-output', '\n✓ BaseAgent tests completed successfully', 'success');
+            } catch (error) {
+                log('baseagent-output', `✗ Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test AgentManager
+        async function testAgentManager() {
+            clearLog('agentmanager-output');
+            log('agentmanager-output', '=== Testing AgentManager ===\n');
+
+            try {
+                const manager = new AgentManager();
+                
+                // Test initialization
+                await manager.initialize();
+                if (manager.isInitialized) {
+                    log('agentmanager-output', '✓ Manager initialization works', 'success');
+                } else {
+                    log('agentmanager-output', '✗ Manager initialization failed', 'error');
+                }
+
+                // Create test agent
+                class SimpleAgent extends BaseAgent {
+                    constructor() {
+                        super({
+                            agentId: 'simple-agent',
+                            name: 'Simple Agent',
+                            capabilities: ['simple-task'],
+                            version: '1.0.0'
+                        });
+                    }
+
+                    async _executeTask(task) {
+                        return { processed: true, data: task.data };
+                    }
+                }
+
+                // Test registration
+                const agent = new SimpleAgent();
+                await manager.registerAgent(agent);
+                
+                const registeredAgent = manager.getAgent('simple-agent');
+                if (registeredAgent) {
+                    log('agentmanager-output', '✓ Agent registration works', 'success');
+                } else {
+                    log('agentmanager-output', '✗ Agent registration failed', 'error');
+                }
+
+                // Test task dispatch
+                const result = await manager.dispatchTask({
+                    type: 'simple-task',
+                    data: { test: 'data' }
+                });
+                
+                if (result.processed) {
+                    log('agentmanager-output', '✓ Task dispatch works', 'success');
+                } else {
+                    log('agentmanager-output', '✗ Task dispatch failed', 'error');
+                }
+
+                // Test get all agents
+                const allAgents = manager.getAllAgents();
+                log('agentmanager-output', `\nRegistered agents: ${allAgents.length}`);
+
+                // Test system status
+                const status = manager.getSystemStatus();
+                log('agentmanager-output', `System status: ${JSON.stringify(status, null, 2)}`);
+
+                log('agentmanager-output', '\n✓ AgentManager tests completed successfully', 'success');
+            } catch (error) {
+                log('agentmanager-output', `✗ Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test PerformanceMonitorAgent
+        async function testPerformanceAgent() {
+            clearLog('performance-output');
+            log('performance-output', '=== Testing PerformanceMonitorAgent ===\n');
+
+            try {
+                const perfAgent = new PerformanceMonitorAgent();
+                
+                // Initialize
+                await perfAgent.initialize();
+                log('performance-output', '✓ Performance agent initialized', 'success');
+
+                // Set event bus
+                perfAgent.setEventBus(new EventBus());
+
+                // Test performance monitoring
+                const monitorResult = await perfAgent.execute({
+                    id: 'monitor-1',
+                    type: 'monitor'
+                });
+                
+                if (monitorResult.timestamp) {
+                    log('performance-output', '✓ Monitoring works', 'success');
+                    log('performance-output', `Monitor result: ${JSON.stringify(monitorResult, null, 2)}`);
+                } else {
+                    log('performance-output', '✗ Monitoring failed', 'error');
+                }
+
+                // Test analytics
+                const analyticsResult = await perfAgent.execute({
+                    id: 'analytics-1',
+                    type: 'analytics'
+                });
+                
+                if (analyticsResult) {
+                    log('performance-output', '✓ Analytics works', 'success');
+                    log('performance-output', `Analytics: ${JSON.stringify(analyticsResult, null, 2)}`);
+                }
+
+                // Test performance report
+                const reportResult = await perfAgent.execute({
+                    id: 'report-1',
+                    type: 'performance'
+                });
+                
+                if (reportResult.summary) {
+                    log('performance-output', '✓ Performance report works', 'success');
+                    log('performance-output', `Report summary: ${JSON.stringify(reportResult.summary, null, 2)}`);
+                }
+
+                log('performance-output', '\n✓ PerformanceMonitorAgent tests completed successfully', 'success');
+            } catch (error) {
+                log('performance-output', `✗ Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Test full integration
+        async function testIntegration() {
+            clearLog('integration-output');
+            log('integration-output', '=== Testing Full Integration ===\n');
+
+            try {
+                // Initialize the full system
+                log('integration-output', 'Initializing agent system...');
+                const success = await initializeAgentSystem();
+                
+                if (success) {
+                    log('integration-output', '✓ System initialization successful', 'success');
+                } else {
+                    log('integration-output', '✗ System initialization failed', 'error');
+                    return;
+                }
+
+                // Get system status
+                const status = getAgentSystemStatus();
+                log('integration-output', `\nSystem Status:\n${JSON.stringify(status, null, 2)}`);
+
+                // Test task execution
+                log('integration-output', '\nTesting task execution...');
+                const result = await testAgentSystem();
+                
+                if (result) {
+                    log('integration-output', '✓ Task execution successful', 'success');
+                    log('integration-output', `Result: ${JSON.stringify(result, null, 2)}`);
+                } else {
+                    log('integration-output', '✗ Task execution failed', 'error');
+                }
+
+                // Test event emission
+                log('integration-output', '\nTesting event system...');
+                const eventBus = agentManager.getEventBus();
+                
+                let eventReceived = false;
+                eventBus.once('test-integration', (event) => {
+                    eventReceived = true;
+                    log('integration-output', `Event received: ${JSON.stringify(event.data)}`);
+                });
+                
+                await eventBus.emit('test-integration', { test: 'data' });
+                
+                if (eventReceived) {
+                    log('integration-output', '✓ Event system works', 'success');
+                } else {
+                    log('integration-output', '✗ Event system failed', 'error');
+                }
+
+                log('integration-output', '\n✓ Integration tests completed successfully', 'success');
+            } catch (error) {
+                log('integration-output', `✗ Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Show monitor dashboard
+        function showMonitorDashboard() {
+            try {
+                showAgentMonitor();
+                log('integration-output', '✓ Monitor dashboard opened', 'success');
+            } catch (error) {
+                log('integration-output', `✗ Error opening monitor: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run basic tests on load
+        window.addEventListener('load', () => {
+            console.log('Test page loaded. Click buttons to run tests.');
+        });
+    </script>
+</body>
+</html>
