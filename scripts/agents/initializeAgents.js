@@ -42,6 +42,31 @@ async function initializeAgentSystem() {
     await agentManager.registerAgent(workflowAgent);
     console.log('WorkflowAutomationAgent registered');
 
+    // Register Smart Prompts Agent (2.2)
+    const smartPromptsAgent = new SmartPromptsAgent();
+    await agentManager.registerAgent(smartPromptsAgent);
+    console.log('SmartPromptsAgent registered');
+
+    // Register Learning & Personalization Agent (2.3)
+    const learningAgent = new LearningPersonalizationAgent();
+    await agentManager.registerAgent(learningAgent);
+    console.log('LearningPersonalizationAgent registered');
+
+    // Register Context Management Agent (2.4)
+    const contextAgent = new ContextManagementAgent();
+    await agentManager.registerAgent(contextAgent);
+    console.log('ContextManagementAgent registered');
+
+    // Register Advanced Prompt Chains Agent (2.5)
+    const advancedChainsAgent = new AdvancedPromptChainsAgent();
+    await agentManager.registerAgent(advancedChainsAgent);
+    console.log('AdvancedPromptChainsAgent registered');
+
+    // Register Notion Integration Agent (optional)
+    const notionAgent = new NotionIntegrationAgent();
+    await agentManager.registerAgent(notionAgent);
+    console.log('NotionIntegrationAgent registered');
+
     // Set up event listeners for existing extension features
     _setupEventBridges();
 
