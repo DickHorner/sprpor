@@ -54,6 +54,12 @@
         "scripts/thirdParty/highlight.js",
         "scripts/thirdParty/sortable.js",
         "scripts/thirdParty/sse.js",
+        "scripts/agents/EventBus.js",
+        "scripts/agents/BaseAgent.js",
+        "scripts/agents/AgentManager.js",
+        "scripts/agents/PerformanceMonitorAgent.js",
+        "scripts/agents/AgentMonitor.js",
+        "scripts/agents/initializeAgents.js",
         "scripts/content/initialize.js",
         "scripts/content/fetchEventListeners.js",
         "scripts/content/rowAssistant.js",
@@ -105,7 +111,8 @@
       ],
       "css": [
         "scripts/styles/global.css",
-        "scripts/styles/katex.css"
+        "scripts/styles/katex.css",
+        "scripts/styles/agent-monitor.css"
       ],
       "matches": [
         "https://chat.openai.com/*"
